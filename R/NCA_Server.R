@@ -1,17 +1,3 @@
-#' ruminate: Shiny app and module to facilitate pharamacometrics analysis
-#'
-#' This is done by creating a Shiny interface to different tools for data
-#' transformation (`dplyr` and `tidyr`), plotting (`ggplot2`), and
-#' noncompartmental analysis (`PKNCA`). These results can be reported in Excel,
-#' Word or PowerPoint. The state of the app can be saved and loaded at a later
-#' date. When saved, a script is generated to reproduce the different actions in
-#' the Shiny interface.
-#'
-#' @seealso \url{https://ruminate.ubiquity.tools/}
-#' @docType package
-#' @name ruminate
-"_PACKAGE"
-
 #'@import rhandsontable
 #'@import dplyr
 #'@import tidyr
@@ -88,21 +74,10 @@ NCA_Server <- function(id,
 
       current_ana = NCA_fetch_current_ana(state)
 
-      if(is.null(current_ana[["code"]])){
+      if(is.null(current_ana[["code_sa"]])){
         uiele = "# Run analysis to see code."
       } else {
-        uiele = current_ana[["code"]]
-
-        # This will define the nca parameter summary (nps) table.
-        nps_def = 'NCA_nps = NCA_fetch_np_meta()[["summary"]]'
-
-        # Adding the preamble to load necessary packages
-        mod_deps = FM_fetch_deps(state = state, session = session)
-        if("package_code" %in% names(mod_deps)){
-          uiele = paste0(c(mod_deps$package_code, "",
-                           nps_def, "", uiele), collapse="\n")
-        }
-
+        uiele = paste0(current_ana[["code_sa"]], collapse="\n")
       }
 
 
@@ -212,7 +187,6 @@ NCA_Server <- function(id,
                              id_UD           = id_UD,
                              id_DW           = id_DW,
                              react_state     = react_state)
-      uiele = NULL
       uiele = NULL
       if((system.file(package="clipr") != "") & !deployed){
         uiele = shinyWidgets::actionBttn(
@@ -429,17 +403,24 @@ NCA_Server <- function(id,
                              id_UD           = id_UD,
                              id_DW           = id_DW,
                              react_state     = react_state)
-
+      if(!is.null(state[["MC"]][["tooltips"]][["url_data"]])){
+        data_link = icon_link(href=state[["MC"]][["tooltips"]][["url_data"]])
+      }else{
+        data_link = NULL
+      }
       # This creates the selection but it is updated in the observe() below
       choicesOpt = NULL
       uiele =
         shinyWidgets::pickerInput(
           selected   = "PH",
           inputId    = NS(id, "select_current_view"),
-          label      = state[["MC"]][["labels"]][["select_current_view"]],
+          #label      = state[["MC"]][["labels"]][["select_current_view"]],
+          label      =  tagList(state[["MC"]][["labels"]][["select_current_view"]], data_link),
           choices    = c("PH"),
           width      = state[["MC"]][["formatting"]][["select_current_view"]][["width"]],
           choicesOpt = choicesOpt)
+
+
 
       uiele})
     #------------------------------------
@@ -590,11 +571,17 @@ NCA_Server <- function(id,
       # Choice list
       choices = state[["NCA"]][["nca_parameters"]][["choices"]]
 
+      if(!is.null(state[["MC"]][["tooltips"]][["url_parameters"]])){
+        parameters_link = icon_link(href=state[["MC"]][["tooltips"]][["url_parameters"]])
+      }else{
+        parameters_link = NULL
+      }
+
       uiele =
       shinyWidgets::pickerInput(
         inputId    = NS(id, "select_ana_nca_parameters"),
         choices    = choices,
-        label      = state[["MC"]][["labels"]][["select_ana_nca_parameters"]],
+        label      = tagList(state[["MC"]][["labels"]][["select_ana_nca_parameters"]], parameters_link),
         selected   = value,
         multiple   = TRUE,
         width      = state[["MC"]][["formatting"]][["select_ana_nca_parameters"]][["width"]],
@@ -1918,9 +1905,6 @@ NCA_Server <- function(id,
               null_ok  = TRUE,
               dscols   = dscols)
 
-            #JMH add multiple option to NCA_find_col
-            # react to dose, id and time and remove those options
-
             # Pulling out column header formatting information.
             hfmt = FM_fetch_data_format(ds[["DS"]], state)
             sel_style   = c(rep("", length(dscols)))
@@ -1994,9 +1978,6 @@ NCA_Server <- function(id,
               null_ok  = TRUE,
               dscols   = dscols)
 
-            #JMH add multiple option to NCA_find_col
-            # react to dose, id and time and remove those options
-
             # Pulling out column header formatting information.
             hfmt = FM_fetch_data_format(ds[["DS"]], state)
             sel_style   = c(rep("", length(dscols)))
@@ -2069,9 +2050,6 @@ NCA_Server <- function(id,
             null_ok  = TRUE,
             dscols   = dscols)
 
-          #JMH add multiple option to NCA_find_col
-          # react to dose, id and time and remove those options
-
           # Pulling out column header formatting information.
           hfmt = FM_fetch_data_format(ds[["DS"]], state)
           sel_style   = c(rep("", length(dscols)))
@@ -2121,7 +2099,6 @@ NCA_Server <- function(id,
                              id_DW           = id_DW,
                              react_state     = react_state)
 
-
       current_ana = NCA_fetch_current_ana(state)
       uiele = NULL
       if(!is.null(current_ana[["ana_dsview"]])){
@@ -2140,9 +2117,6 @@ NCA_Server <- function(id,
             patterns = state[["MC"]][["detect_col"]][["analyte"]],
             null_ok  = TRUE,
             dscols   = dscols)
-
-          #JMH add multiple option to NCA_find_col
-          # react to dose, id and time and remove those options
 
           # Pulling out column header formatting information.
           hfmt = FM_fetch_data_format(ds[["DS"]], state)
@@ -2804,6 +2778,21 @@ NCA_Server <- function(id,
                  htmlOutput(NS(id, "ui_nca_new_ana"))
                  ))
 
+        if(!is.null(state[["MC"]][["tooltips"]][["url_dosing"]])){
+          dosing_link = icon_link(href=state[["MC"]][["tooltips"]][["url_dosing"]])
+        }else{
+          dosing_link = NULL
+        }
+        if(!is.null(state[["MC"]][["tooltips"]][["url_intervals"]])){
+          interval_link = icon_link(href=state[["MC"]][["tooltips"]][["url_intervals"]])
+        }else{
+          interval_link = NULL
+        }
+        if(!is.null(state[["MC"]][["tooltips"]][["url_data"]])){
+          data_link = icon_link(href=state[["MC"]][["tooltips"]][["url_data"]])
+        }else{
+          data_link = NULL
+        }
 
         # Main NCA options tab
         uiele_nca_options = tagList(
@@ -2815,7 +2804,7 @@ NCA_Server <- function(id,
             htmlOutput(NS(id, "ui_nca_ana_scenario_use")), tags$br()
             ),
           tags$br(),
-          tags$h3(state[["MC"]][["labels"]][["head_intervals"]]),
+          tags$h3(state[["MC"]][["labels"]][["head_intervals"]], interval_link),
           tags$h4(state[["MC"]][["labels"]][["head_intervals_create"]]),
           div(style="display:inline-block;vertical-align:bottom",
             htmlOutput(NS(id, "ui_nca_ana_int_range"))
@@ -2830,11 +2819,11 @@ NCA_Server <- function(id,
           #tags$h4(state[["MC"]][["labels"]][["head_intervals_current"]]),
           #tagList(rhandsontable::rHandsontableOutput(NS(id, "hot_nca_intervals"))),
           tags$br(),
-          tags$h3(state[["MC"]][["labels"]][["head_dose_from"]], icon_link(href=state[["MC"]][["tooltips"]][["url_dosing"]])),
+          tags$h3(state[["MC"]][["labels"]][["head_dose_from"]], dosing_link),
            div(style="display:inline-block",
              htmlOutput(NS("NCA", "ui_nca_ana_dose_from"))),
           tags$br(),
-          tags$h3(state[["MC"]][["labels"]][["head_col_mapping"]]),
+          tags$h3(state[["MC"]][["labels"]][["head_col_mapping"]], data_link),
           tags$h4(state[["MC"]][["labels"]][["head_col_mapping_required"]]),
            div(style="display:inline-block",
              htmlOutput(NS("NCA", "ui_nca_ana_col_id"))),
@@ -2995,10 +2984,10 @@ NCA_Server <- function(id,
 
         current_ana = NCA_fetch_current_ana(state)
 
-        if(is.null(current_ana[["code"]])){
+        if(is.null(current_ana[["code_sa"]])){
           uiele = "# Run analysis to see code."
         } else {
-          uiele = current_ana[["code"]]
+          uiele = paste0(current_ana[["code_sa"]], collapse="\n")
         }
 
         clipr::write_clip(uiele)
@@ -3196,7 +3185,10 @@ NCA_fetch_state = function(id, input, session,
   # Here we update the state based on user input
   for(ui_name in state[["NCA"]][["ui_ids"]]){
     if(!is.null(isolate(input[[ui_name]]))){
-       state[["NCA"]][["ui"]][[ui_name]] = isolate(input[[ui_name]])
+      # Prevents updating when the ui is being held.
+      if(!fetch_hold(state, ui_name)){
+         state[["NCA"]][["ui"]][[ui_name]] = isolate(input[[ui_name]])
+      }
      } else {
        state[["NCA"]][["ui"]][[ui_name]] = ""
      }
@@ -3205,8 +3197,6 @@ NCA_fetch_state = function(id, input, session,
 
   #---------------------------------------------
   # This will sync the analysis options in the UI to the values in the UI
-  # JMH probably need to put some logic here if the analysis has changed using
-  # the selector
   for(ui_name in names(state[["NCA"]][["ui_ana_map"]])){
     # We only update if there are no holds set:
     # for the current ui_name
@@ -3446,7 +3436,10 @@ NCA_fetch_state = function(id, input, session,
 
     # Changing the current view to the one selected in the UI
     # JMH create NCA_mkactive_ana here to set active
-    state[["NCA"]][["current_ana"]]  =  state[["NCA"]][["ui"]][["select_current_ana"]]
+    # state[["NCA"]][["current_ana"]]  =  state[["NCA"]][["ui"]][["select_current_ana"]]
+    state = NCA_mkactive_ana(state, state[["NCA"]][["ui"]][["select_current_ana"]])
+    state = set_hold(state)
+    # browser()
   }
   #---------------------------------------------
   # Copy Analysis
@@ -3617,7 +3610,6 @@ NCA_fetch_state = function(id, input, session,
   #---------------------------------------------
   # Saving the state
   FM_set_mod_state(session, id, state)
-
   # Returning the state
   state}
 
@@ -3797,6 +3789,8 @@ NCA_init_state = function(FM_yaml_file, MOD_yaml_file, id, id_UD, id_DW, session
   state[["NCA"]][["anas"]]          = NULL
   state[["NCA"]][["ana_cntr"]]      = 0
   state[["NCA"]][["current_ana"]]   = NULL
+
+  state[["NCA"]][["mod_deps"]]      =  FM_fetch_deps(state = state, session = session)
 
   formods::FM_le(state, "State initialized")
 
@@ -4567,9 +4561,11 @@ NCA_new_ana    = function(state){
     dscols   = dscols)
   nca_def[["col_dur"]] = NCA_find_col(
     patterns = state[["MC"]][["detect_col"]][["dur"]],
+    null_ok  = TRUE,
     dscols   = dscols)
   nca_def[["col_analyte"]] = NCA_find_col(
     patterns = state[["MC"]][["detect_col"]][["analyte"]],
+    null_ok  = TRUE,
     dscols   = dscols)
   nca_def[["col_conc"]] = NCA_find_col(
     patterns = state[["MC"]][["detect_col"]][["conc"]],
@@ -4677,8 +4673,13 @@ NCA_find_col             = function(curr_ana = NULL,
   value     = NULL
   COL_FOUND = FALSE
 
-
-  # JMH add curr_ana parsing here
+  # if curr_ana is supplied and it exisits in the dataset then that is used.
+  if(!is.null(curr_ana)){
+    if(curr_ana %in% dscols){
+      value = curr_ana
+      COL_FOUND = TRUE
+    }
+  }
 
   if(!COL_FOUND){
     if(!is.null(curr_ui)){
@@ -4916,7 +4917,7 @@ NCA_fetch_np_meta = function(
       if(system.file(package="cli")==""){
         message(msg)
       } else {
-        cli::cli_alert_danger(msg)
+        FM_message(msg, entry_type="danger")
       }
     }
   }
@@ -4949,17 +4950,38 @@ NCA_add_int = function(state, interval_start, interval_stop, nca_parameters){
   current_ana = NCA_fetch_current_ana(state)
 
 
-  # This adds the row
-  current_ana[["intervals"]] =
-  rbind( current_ana[["intervals"]],
-    data.frame("start"        = interval_start,
-               "stop"         = interval_stop,
-               "np_actual"    = params_string,
-               "np_text"      = names_string,
-               "delete"       = FALSE))
-  # Saving the current analysis with the interval added
-  state = NCA_set_current_ana(state, current_ana)
 
+  # This determines if the new interval already exists:
+  int_exists = FALSE
+  if(!is.null(current_ana[["intervals"]])){
+    if(any((current_ana[["intervals"]][["start"]] == interval_start) &
+           (current_ana[["intervals"]][["stop"]]  == interval_stop))){
+     int_exists = TRUE
+    }
+  }
+
+  # This adds a new interval:
+  if(int_exists){
+    # If the interval exists we replace the values
+    int_ridx = which(c((current_ana[["intervals"]][["start"]] == interval_start) & (current_ana[["intervals"]][["stop"]]  == interval_stop)))
+    # Now we update just the parameters:
+    current_ana[["intervals"]][int_ridx, "np_actual"] = params_string
+    current_ana[["intervals"]][int_ridx, "np_text" ]  = names_string
+    formods::FM_le(state, "NCA_add_int: update")
+  } else {
+    # If the interval does not exist we add a new one:
+    current_ana[["intervals"]] =
+    rbind( current_ana[["intervals"]],
+      data.frame("start"        = interval_start,
+                 "stop"         = interval_stop,
+                 "np_actual"    = params_string,
+                 "np_text"      = names_string,
+                 "delete"       = FALSE))
+    formods::FM_le(state, "NCA_add_int: append")
+  }
+
+  # Saving the current analysis with the interval added/updated
+  state = NCA_set_current_ana(state, current_ana)
 
 state}
 
@@ -5416,20 +5438,6 @@ nca_builder = function(state){
         col_args,
         paste0(    '    dose_from = "', dose_from , '")[["dose_rec"]]' ))
 
-  # JMH dose_rec_fix delete
-  # # Creating dosing records
-  # cmd=c(cmd,
-  #   "",
-  #   "# Creating dosing records by reducing the dataset to one row for each unique:",
-  #   "# Subject, Dose number, Grouping (optional) combination",
-  #   paste0(nca_drec_object_name, " = "),
-  #   paste0("  dplyr::group_by(", nca_ds_object_name,",", paste0(plus_cols, collapse=","),") |> "),
-  #   "  dplyr::filter(dplyr::row_number() == 1) |> ",
-  #   "  dplyr::ungroup() |>",
-  #   paste0("  dplyr::select(",paste0(dose_select_cols, collapse=", "),") |> "),
-  #   paste0("  dplyr::mutate(", col_time, " = ", col_time,"-", col_ntime ,")  # Calculating the dose time from on the nominal offset")
-  #   )
-  #
     # Constructing dose_obj
     cmd=c(cmd,
       "",
@@ -5443,6 +5451,15 @@ nca_builder = function(state){
              ")"
         )
       )
+
+    # If we dose from rows we need to strip those out
+    if(dose_from == "rows"){
+      cmd=c(cmd,
+        "",
+        "# Redusing the NCA dataset to just the observations",
+        paste0(nca_ds_object_name, " = dplyr::filter(", nca_ds_object_name, ", EVID == 0)")
+        )
+    }
 
     # Constructing conc_obj
     col_dur_component =  NULL
@@ -5646,10 +5663,26 @@ nca_builder = function(state){
     isgood = FALSE
   }
 
- #myDS = ds$DS
- #eval(parse(text=code_ana_only))
- #a = paste(code, collapse = "\n")
- #browser()
+
+
+
+  # Creating the stand-alone code:
+  nps_def  = 'NCA_nps = NCA_fetch_np_meta()[["summary"]]'
+  mod_deps = state[["NCA"]][["mod_deps"]]
+  code_sa  = c(mod_deps$package_code,
+              "",
+              "# Metadata about NCA parameters",
+              nps_def,
+              "",
+              "# Report object used for creating tables below",
+              'rpt =  onbrand::read_template(',
+              '  template = file.path(system.file(package = "onbrand"), "templates", "report.docx"),',
+              '  mapping = file.path(system.file(package = "onbrand"), "templates", "report.yaml")',
+              ')',
+              "",
+              code)
+
+
 
   # saving any messages:
   msgs = c(msgs, current_ana[["msgs"]])
@@ -5659,6 +5692,7 @@ nca_builder = function(state){
   # Saving the state information
   current_ana[["isgood"]]            = isgood
   current_ana[["code"]]              = code
+  current_ana[["code_sa"]]           = code_sa
   current_ana[["code_components"]]   = list(
     code_previous      = code_previous,
     code_ana_only      = code_ana_only,
@@ -5780,9 +5814,6 @@ run_nca_components = function(
         # Running the analysis and trapping any errors
         nca_run_res = formods::FM_tc(cmd, tc_env, capture)
 
-        #browser()
-
-
         # Capturing the exit status
         if(nca_run_res[["isgood"]]){
           # Pulling out the capture objects and saving them
@@ -5853,18 +5884,6 @@ run_nca_components = function(
 
             # There should be at least one element here:
             if(!is.null(list_names)){
-              # This checks the currently selected list element for this
-              # component. If it doesn't exist we replace that value with the
-              # first element:
-             ## JMH broken here:
-             #cat(paste0(fig_tab, "\n"))
-             #if(fig_tab == "tb_ind_params"){
-             #  NCA_1_res = tc_env$NCA_1_res
-             #  rpt = tc_env$rpt
-             #  NCA_nps = tc_env$NCA_nps
-             #
-             #  browser()
-             #}
               if(!(current_ana[[ fig_tabs[[fig_tab]][["current"]] ]] %in% list_names)){
                 current_ana[[ fig_tabs[[fig_tab]][["current"]] ]] = list_names[1]
               }
@@ -6139,7 +6158,6 @@ mk_table_ind_obs = function(
   # We need to attach the units to the rows as well:
   row_common_head = rbind(row_common_head, units_data)
 
-  #browser()
   stres = onbrand::span_table(
              table_body      = table_body,
              row_common      = row_common,
@@ -6507,37 +6525,6 @@ NCA_fetch_current_obj = function(state, obj_type){
 
 obj}
 
-#'@export
-#'@title Run the {ruminate} Shiny App
-#'@description Runs the pharmacometrics ruminate app.
-#'@param host Hostname of the server ("127.0.0.1")
-#'@param port Port number for the app (3838)
-#'@param mksession Boolean value, when TRUE will load test session data
-#'for app testing (FALSE)
-#'@return Nothing is returned, this function just runs the built-in ruminate
-#'app.
-#'@examples
-#'if (interactive()) {
-#' ruminate()
-#'}
-ruminate = function(host="127.0.0.1", port=3838, mksession = FALSE){
-
-  # File used to indicate we're in test mode
-  ftmptest = file.path(tempdir(), "ruminate.test")
-
-  # Deleteing any existing files
-  if(file.exists(ftmptest)){
-    unlink(ftmptest)
-  }
-
-  # If mksession is true we set this value to true
-  if(mksession){
-    file.create(ftmptest)
-  }
-
-  shiny::runApp(system.file(package="ruminate", "templates","ruminate.R"),
-                host  = host,
-                port  = port)}
 
 
 #'@export
@@ -6973,7 +6960,6 @@ NCA_test_mksession = function(session, id = "NCA", id_UD="UD", id_DW="DW", id_AS
     state = run_nca_components(state)
   }
   #------------------------------------
-
   # This functions works both in a shiny app and outside of one
   # if we're in a shiny app then the 'session' then the class of
   # session will be a ShinySession. Otherwise it'll be a list if
@@ -7278,3 +7264,30 @@ ds}
 NCA_fetch_ana_pknca = function(state, current_ana){
   pknca_res = current_ana[["objs"]][["res"]][["value"]]
 pknca_res}
+
+#'@export
+#'@title Fetch PKNCA Results Object
+#'@description Fetches the PKNCA output for a specified analysis
+#'@param state NCA state from \code{NCA_fetch_state()}
+#'@param ana_id Analysis ID to make active.
+#'@return State with the analysis ID made active.
+#' JMH add to example script below
+#'@example inst/test_apps/NCA_funcs.R
+NCA_mkactive_ana  = function(state, ana_id){
+    state[["NCA"]][["current_ana"]]  =  state[["NCA"]][["ui"]][["select_current_ana"]]
+
+    # Column values are found based on heuristics that include the current
+    # value in the ui. This will overwrite the current ui column values tracked with
+    # those for the current analysis.
+    current_ana = NCA_fetch_current_ana(state)
+
+    col_uis = names(state[["NCA"]][["ui"]])
+    col_uis = col_uis[ stringr::str_detect(col_uis, "^select_ana_col") ]
+
+    for(col_ui in col_uis){
+      ana_name =  state[["NCA"]][["ui_ana_map"]][[col_ui]]
+      state[["NCA"]][["ui"]][[col_ui]] = current_ana[[ana_name]]
+    }
+    #state = NCA_set_current_ana(state, current_ana)
+
+state}

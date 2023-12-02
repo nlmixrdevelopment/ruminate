@@ -1,6 +1,6 @@
 MC:
   code: # module specific code options
-    packages: ["PKNCA", "dplyr", "stringr", "formods", "ruminate"]
+    packages: ["PKNCA", "dplyr", "stringr", "formods", "ruminate", "onbrand"]
     readOnly: TRUE
     mode:     r
     preamble: |-
@@ -276,7 +276,11 @@ MC:
     ana_key:           "Unique description used for referencing analysis and in other elements (e.g. reporting)."
     show_code:         "Show analysis code"
     nca_intervals:     "Current NCA intervals"
+    # Set urls to NULL to disable
     url_dosing:        "https://ruminate.ubiquity.tools/articles/noncompartmental_analysis.html#dosing-information"
+    url_data:          "https://ruminate.ubiquity.tools/articles/noncompartmental_analysis.html#data-format"
+    url_intervals:     "https://ruminate.ubiquity.tools/articles/noncompartmental_analysis.html#nca-analysis-intervals"
+    url_parameters:    "https://ruminate.ubiquity.tools/articles/noncompartmental_analysis.html#nca-parameters"
     ph:
       text_ana_interval_start: 0
       text_ana_interval_stop:  "number or Inf"
@@ -315,12 +319,12 @@ MC:
     curr_anas_none:                  "No figures yet created"
     no_dataset:                      "No datasets available to analyze. You need to load a dataset to use this module."
     ana_use_scenario:                "Analysis Template"
-    ana_add_int:                     "Add Interval"
+    ana_add_int:                     "Add/Update Interval"
     no_intervals:                    "No intervals added yet"
-    panel_analysis_opts:             "Analysis Options"
+    panel_analysis_opts:             "Analysis Details"
     panel_figures:                   "Figures"
     panel_tables:                    "Tables"
-    panel_nca_config:                "Configuration"
+    panel_nca_config:                "NCA Options"
     text_ana_interval_start:         "Start"
     text_ana_interval_stop:          "End"
     select_ana_interval_range:       "Interval Range"

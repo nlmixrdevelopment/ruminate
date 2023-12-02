@@ -4,8 +4,10 @@ require(ggplot2)
 require(rhandsontable)
 require(flextable)
 require(ruminate)
+require(dplyr)
 # Determining if ubiquity is installed
 if(system.file(package="ubiquity") == ""){
+  require(ubiquity)
   ubiquity_found = FALSE
 } else {
   require(ubiquity)
@@ -133,6 +135,17 @@ if(gridExtra_found & ubiquity_found){
 
 ## ----warning=FALSE, message=FALSE, echo=FALSE---------------------------------
 #  save(presim, file="NCA_presim.RData")
+
+## ----warning=FALSE, message=FALSE, echo=FALSE, eval=TRUE----------------------
+NCA_meta = NCA_fetch_PKNCA_meta()
+NCA_meta = NCA_meta[["parameters"]] |>
+  dplyr::select(-data_type) |>
+  dplyr::rename("PKNCA Parameter"    = parameter)    |>
+  dplyr::rename("App Parameter Name" = pretty_name)  |>
+  dplyr::rename("Type of Units"      = unit_type)    |>
+  dplyr::rename("Description"        = desc)      
+
+DT::datatable(NCA_meta)
 
 ## ----echo=FALSE, message=FALSE, warning=FALSE, eval=TRUE,  style="max-height: 100px;", comment=""----
 #yaml= file.path(system.file(package="ruminate"), "templates", "NCA.yaml")

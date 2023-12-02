@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Model Building</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Model Building</h1>
+
+
+
+<p><strong><em>NOTE: This module is currently under active develpment
+and this documentation is a work in progress</em></strong></p>
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>The model building module is constructed around the
+<code>{rxode2}</code> package. It allows you to load a base model from
+either the model catalog or a user-create file. Once loaded the user can
+modify a model (change the structure, parameter values, etc), make a
+copy, etc. You can upload a model in rxode2 format and also NONMEM
+format. The NONMEM file (control stream or listing output) will be
+converted after upload into rxode2 using the <code>{nonmem2rx}</code>
+package.</p>
+</div>
+<div id="model-catalog" class="section level1">
+<h1>Model catalog</h1>
+<p>The model catalog is built from the sources field of the
+configuration file. It can include the models from the
+<code>{nlmixr2lib}</code> model library. You can also include user
+defined files. If they are specified but not found, they will be
+skipped. Edit the MB yaml file to to alter this.</p>
+<div id="user-defined-models" class="section level2">
+<h2>User-defined models</h2>
+<p>User-defined models can be included in the catalog or uploaded into
+the app. These models can be specified in either NONMEM or rxode2
+formats. For NONMEM models it can be a control stream (good), the
+listing output from an estimation (better), or the XML output from an
+estimation (best). To use an nlmixr2 model you simply need a function
+definition assigned to the object <code>my_fcn</code>. For examples
+see:</p>
+<ul>
+<li><code>system.file(package=&quot;ruminate&quot;, &quot;templates&quot;, &quot;MB_model_rxode2.R&quot;)</code></li>
+<li><code>system.file(package=&quot;ruminate&quot;, &quot;templates&quot;, &quot;MB_model_NONMEM.ctl&quot;)</code></li>
+</ul>
+<p>Modules are specified in the <code>sources</code> section of the
+configuration file. The default configuration file will look in the
+working directory of the App for <code>user_model.R</code> and
+<code>user_model.ctl</code>. So if you have a rxode2 model you can name
+it <code>user_model.R</code> and place it in the app directory to be
+included in the catalog. Similarly if you have a NONMEM control stream
+you can name it <code>user_model.ctl</code>, and it will be included
+automatically. If these do not exist they will be skipped. You can
+create as many entries as you want.</p>
+</div>
+</div>
+<div id="configuration-file" class="section level1">
+<h1>Configuration File</h1>
+<pre><code># The MC field is a skeleton for constructing new modules
+MC:
+  # The prefix of object names created in the generated code
+  element_object_name: &quot;MB_obj&quot;
+  # This is a list of model sources. In the app the sources will be listed in
+  # the order shown here. This is also referred to as the model catalog. If
+  # the type is set to nlmixr2lib it will insert the models from nlmixr2lib.
+  # User defined models can be used as well. See the examples below for
+  # rxode2 and NONMEM models.
+  # 
+  # - group: This is how models will be grouped in the selection pulldown.
+  # - name: Short name for the model: **NOTE that names need to be unique**.
+  # - description: Verbose description of the model.
+  # - type: Supported model types are &quot;nlmixr2lib&quot;, &quot;rxode2&quot; or &quot;NONMEM&quot;.
+  # - obj: For the rxode2 type you need to also specify the name of the object 
+  #   that is created. This option is only used for the rxode2 type.
+  # - file: For both rxode2 and nlmixr2 you need to specify a character string 
+  #   with a file path. This will be evaluated as an R command, so keep that 
+  #   in mind. If the file is not found it will be skipped when the app loads.
+  sources:
+  - source:
+      group:       &quot;User-defined Models&quot;
+      name:        &quot;rxode2 User model&quot;
+      description: &quot;User-defined rxode2 model&quot;
+      type:        &quot;rxode2&quot;
+      obj:         &quot;my_fcn&quot;
+      file:        &#39;file.path(getwd(),&quot;user_model.R&quot;)&#39;
+  - source:
+      group:       &quot;User-defined Models&quot;
+      name:        &quot;NONMEM User model&quot;
+      description: &quot;User-defined NONMEM model&quot;
+      type:        &quot;NONMEM&quot;
+      file:        &#39;file.path(getwd(),&quot;user_model.ctl&quot;)&#39;
+  - source:
+      group:       &quot;Model Library&quot;
+      type:        &quot;nlmixr2lib&quot;
+      name:        &quot;nlmixr2 Model Library&quot;
+# The include section is optional. You can use this section to copy files 
+# from the directory where you are running the app to the user directory to be
+# used in the app and when saved. The source and dest options can be a path
+# command like below or a double
+# quoted string: &#39;&quot;/path/to/file&quot;&#39;
+# The dest should be relative to user directory (think the root of the zip
+# file that is exported). See formods.yaml for examples. 
+#
+# include:
+#   files:
+#   - file:
+#       source: &#39;file.path(system.file(package=&quot;onbrand&quot;), &quot;templates&quot;, &quot;report.docx&quot;)&#39;
+#       dest:   &#39;file.path(&quot;config&quot;,&quot;report.docx&quot;)&#39;
+  code: # module specific code options
+    packages: [ &quot;rxode2&quot;, &quot;nonmem2rx&quot;]
+    readOnly: TRUE
+    mode:     r
+  # Controls what is shown in the compact ui mode:
+  compact:
+    code:    TRUE 
+    clip:    TRUE 
+  # This is where you put reporting options. The expected options are shown
+  # here, but module-specific options can also be added if needed:
+  reporting:
+    enabled: FALSE
+    # Priority of reporting relative to other modules 
+    # (higher numbers are reported first)
+    priority: 1
+  # put different formatting options (widths, heights,
+  # shinyWidgets button sizes, etc) here.
+  formatting:
+    # Dimensions of code snippet box
+    code:
+      width:  800
+      height: 300
+    preview:
+      width:  &quot;800px&quot;
+      height: &quot;500px&quot;
+    input:
+    current_element:
+      width:  &quot;200px&quot;
+      tooltip: &quot;Change the current model.&quot;
+      tooltip_position: &quot;right&quot;
+    element_name:
+      width:  &quot;200px&quot;
+    button_clk_run:
+      size: &quot;sm&quot;
+      block: TRUE
+    button_clk_del:
+      size: &quot;sm&quot;
+      block: TRUE
+      tooltip: &quot;Delete the current model.&quot;
+      tooltip_position: &quot;right&quot;
+    button_clk_save:
+      size: &quot;sm&quot;
+      block: TRUE
+      tooltip: &quot;Save the name for the current model.&quot;
+      tooltip_position: &quot;right&quot;
+    button_clk_clip:
+      size: &quot;sm&quot;
+      block: TRUE
+      tooltip: &quot;Copy the code to generate the current model to the clipboard.&quot;
+      tooltip_position: &quot;right&quot;
+    button_clk_copy:
+      size: &quot;sm&quot;
+      block: TRUE
+      tooltip: &quot;Make a copy of the current model.&quot;
+      tooltip_position: &quot;right&quot;
+    button_clk_new:
+      size: &quot;sm&quot;
+      block: TRUE
+      tooltip: &quot;Create a new model.&quot;
+      tooltip_position: &quot;right&quot;
+      width: 100
+    catalog_selection:
+      width:   &quot;200px&quot;
+      truncate: 65
+      tooltip:  &quot;Select base model from the catalog.&quot;
+      tooltip_position: &quot;top&quot;    
+    model_type_selection:
+      width: &quot;200px&quot;
+      tooltip: &quot;Select the type of the model being uploaded.&quot;
+      tooltip_position: &quot;right&quot;
+      choices:
+        rxode2: &quot;rxode2 function&quot;
+        NONMEM: &quot;NONMEM (XML, lst, or ctl)&quot;
+      default:   &quot;rxode2&quot;
+    upload_model_file:   
+      width: &quot;400px&quot;
+    base_from:            
+      size:    &quot;normal&quot;
+      status:  &quot;primary&quot;
+      tooltip: &quot;You can select the base model from a catalog or upload your own&quot;
+      tooltip_position: &quot;bottom&quot;
+      choices:
+        catalog: &quot;Model Catalog&quot;
+        user:    &quot;User-defined model&quot;
+      default: &quot;catalog&quot;
+    # The timescales here can be altered manually. This is the general format:
+    #   short_name:
+    #     conv: &quot;10&quot;
+    #     verb: &quot;A more verbose name&quot;
+    # Generally you dont want to  change what is already here in terms of
+    # these short name used. You can remove timescales you don&#39;t want to use
+    # or add timescales that you need but are not present.
+    #   -verb  You can change the verb field (what the user sees). 
+    #   The order of
+    # Appearance is the same order seen here. The default is the selected
+    # short name for the specified timescale
+    time_scales:
+      width: &quot;200px&quot;
+      default: &quot;weeks&quot;
+      tooltip: &quot;Choose the timescale of the model.&quot;
+      tooltip_position: &quot;top&quot;
+      choices: 
+        months:
+          conv: &quot;60*60*24*4&quot;
+          verb: &quot;Months&quot;
+        weeks:
+          conv: &quot;60*60*24*7&quot;
+          verb: &quot;Weeks&quot;
+        days:
+          conv: &quot;60*60*24&quot;
+          verb: &quot;Days&quot;
+        hours:
+          conv: &quot;60*60&quot;
+          verb: &quot;Seconds&quot;
+        min:  
+          conv: &quot;60*60&quot;
+          verb: &quot;Seconds&quot;
+        sec:
+          conv: &quot;1&quot;
+          verb: &quot;Seconds&quot;
+  labels:
+    current_element: NULL # &quot;Select model&quot;
+    element_name :   NULL # &quot;model name&quot;
+    upload_model_file:    NULL
+    base_from:            NULL
+    catalog_selection:    NULL
+    model_type_selection: NULL
+    time_scale:           NULL
+    catalog_empty:        &quot;No models were found, the catalog is empty&quot;
+    save_btn:             &quot;Save&quot;
+    clip_btn:             &quot;Code&quot; 
+    copy_btn:             &quot;Copy&quot;
+    del_btn:              &quot;Delete&quot;
+    new_btn:              &quot;New&quot;
+    building_model:       &quot;Building model, be patient.&quot;
+    element_name_diff:    &quot;The model name has changed.&quot;
+    model_code_diff:      &quot;The model has changed.&quot;
+    save_change_detected: &quot;You need to click on the save button for these changes to take effect.&quot;
+    head_base_model:      &quot;Starting model&quot;
+    head_model_code:      &quot;Model code&quot;
+    head_time_scale:      &quot;Model time-scale&quot;
+  errors:
+    no_model_found:             &quot;No model was found.&quot;
+    base_model_build_failed:    &quot;The base model build failed.&quot;
+    manual_model_update_failed: &quot;Manual model update failed.&quot;     
+    user_file_upload_failed:    &quot;User-defined model failed.&quot;     
+    nlmixr2lib_not_found:       &quot;The nlmixr2lib package was not found. This library will not be available.&quot;
+    selected_id_bad_list:       &quot;Unable to find a list for the selected component.&quot;
+    selected_id_bad_row:        &quot;Selected component should have 1 row.&quot;
+  tooltips:
+    # Set to FALSE to disable tool tips for this module
+    include: TRUE
+    elements: &quot;Show model components&quot;
+    show_code: &quot;Show model code&quot; 
+    url_rxode: &quot;https://nlmixr2.github.io/rxode2/articles/rxode2-syntax.html&quot; 
+    url_model_types: &quot;https://ruminate.ubiquity.tools/articles/model_builder.html#model-catalog&quot;
+    components:
+      input_tip: &quot;My tool tip&quot;</code></pre>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

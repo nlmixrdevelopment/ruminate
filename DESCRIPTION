@@ -1,6 +1,6 @@
 Package: ruminate
 Title: A Pharmacometrics Data Transformation and Analysis Tool
-Version: 0.1.1
+Version: 0.2.0
 Authors@R: 
     person("John", "Harrold", , "john.m.harrold@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2052-4373"))
@@ -10,17 +10,19 @@ BugReports: https://github.com/john-harrold/ruminate/issues
 URL: https://ruminate.ubiquity.tools/
 Encoding: UTF-8
 Depends: R (>= 4.2.0)
-Imports: digest, dplyr, DT, flextable, formods, ggplot2, onbrand (>=
-        1.0.3), PKNCA (>= 0.10.2), plotly, rhandsontable, rlang, shiny,
-        shinyAce, shinyWidgets, stringr, tidyr, utils, yaml
-Suggests: cli, clipr, gridExtra, knitr, prompter, rmarkdown, readxl,
-        shinydashboard, testthat (>= 3.0.0), ubiquity
+Imports: digest, dplyr, DT, flextable, formods (>= 0.1.2), ggplot2,
+        onbrand (>= 1.0.3), PKNCA (>= 0.10.2), plotly, rhandsontable,
+        rlang, shiny, shinyAce, shinyWidgets, stringr, tidyr, utils,
+        yaml
+Suggests: clipr, gridExtra, knitr, nlmixr2lib, nonmem2rx, prompter,
+        rmarkdown, readxl, rxode2, shinydashboard, testthat (>= 3.0.0),
+        ubiquity
 RoxygenNote: 7.2.3
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2023-08-29 00:25:17 UTC; jmh
+Packaged: 2023-12-02 05:10:52 UTC; jmh
 Author: John Harrold [aut, cre] (<https://orcid.org/0000-0003-2052-4373>)
 Maintainer: John Harrold <john.m.harrold@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-08-29 16:50:05 UTC
+Date/Publication: 2023-12-02 05:50:02 UTC

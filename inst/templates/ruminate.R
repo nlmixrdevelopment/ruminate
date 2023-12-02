@@ -14,16 +14,31 @@ tags$style("@import url(https://use.fontawesome.com/releases/v6.4.0/css/all.css)
 
 # You can copy these locally and customize them for your own needs. Simply
 # change the assignment to the local copy you've modified.
-formods.yaml  = system.file(package="formods","templates", "formods.yaml")
-ASM.yaml      = system.file(package="formods","templates", "ASM.yaml")
-UD.yaml       = system.file(package="formods","templates", "UD.yaml")
-DW.yaml       = system.file(package="formods","templates", "DW.yaml")
-FG.yaml       = system.file(package="formods","templates", "FG.yaml")
+formods.yaml  = system.file(package="formods",  "templates",  "formods.yaml")
+ASM.yaml      = system.file(package="formods",  "templates",  "ASM.yaml")
+UD.yaml       = system.file(package="formods",  "templates",  "UD.yaml")
+DW.yaml       = system.file(package="formods",  "templates",  "DW.yaml")
+FG.yaml       = system.file(package="formods",  "templates",  "FG.yaml")
+MB.yaml       = system.file(package="ruminate", "templates",  "MB.yaml")
+NCA.yaml      = system.file(package="ruminate", "templates",  "NCA.yaml")
 
 # Making sure that the deployed object is created
 if(!exists("deployed")){
   deployed = FALSE
 }
+
+# Making sure that the run_dev object is created
+if(file.exists(file.path(tempdir(), "RUMINTE_DEVELOPMENT"))){
+  run_dev  = TRUE
+}else{
+  run_dev  = FALSE
+}
+
+# If the SETUP.R file exists we source it 
+if(file.exists("SETUP.R")){
+  source("SETUP.R")
+}
+
 
 # If the DEPLOYED file marker existrs we set deployed to TRUE
 if(file.exists("DEPLOYED")){
@@ -71,6 +86,16 @@ tags$li( "If you run into any problems, have questions, or want a feature please
         tags$a("issues", href=issue_url)," page")
 )
 
+ftmptest = file.path(tempdir(), "ruminate.test")
+
+# If the ftmptest file is present we load the development modules
+if(run_dev){
+  dev_modules = shinydashboard::menuItem("Models",          
+                                         tabName = "model",       
+                                         icon    = icon("trowel-bricks"))
+}else {
+  dev_modules = NULL
+}
 
 ui <- shinydashboard::dashboardPage(
   skin="black",
@@ -80,10 +105,12 @@ ui <- shinydashboard::dashboardPage(
        shinydashboard::menuItem("Load/Save",
                                 tabName="loadsave",
                                 icon=icon("arrow-down-up-across-line")) ,
-       shinydashboard::menuItem("Transform Data",  tabName="wrangle",     icon=icon("shuffle")),
-       shinydashboard::menuItem("Visualize",       tabName="plot",        icon=icon("chart-line")),
-       shinydashboard::menuItem("NCA",             tabName="nca",         icon=icon("chart-area")),
-       shinydashboard::menuItem("App Info",        tabName="sysinfo",     icon=icon("book-medical"))
+       shinydashboard::menuItem("Transform Data", tabName="wrangle", icon=icon("shuffle")),
+       shinydashboard::menuItem("Visualize",      tabName="plot",    icon=icon("chart-line")),
+       shinydashboard::menuItem("NCA",            tabName="nca",     icon=icon("chart-area")),
+       dev_modules,
+      #shinydashboard::menuItem("Models",         tabName="model",   icon=icon("trowel-bricks")),
+       shinydashboard::menuItem("App Info",       tabName="sysinfo", icon=icon("book-medical"))
      )
   ),
   shinydashboard::dashboardBody(
@@ -96,6 +123,12 @@ ui <- shinydashboard::dashboardPage(
                fluidRow( prompter::use_prompt(),
                column(width=12,
                htmlOutput(NS("NCA",  "NCA_ui_compact")))))
+               ),
+       shinydashboard::tabItem(tabName="model",
+               shinydashboard::box(title="Build PK/PD Models", width=12,
+               fluidRow( 
+               column(width=12,
+               htmlOutput(NS("MB",  "MB_ui_compact")))))
                ),
        shinydashboard::tabItem(tabName="loadsave",
          #     shinydashboard::box(title=NULL, width=12,
@@ -155,15 +188,25 @@ ui <- shinydashboard::dashboardPage(
                shinydashboard::tabBox(
                  width = 12,
                  title = NULL,
-                 shiny::tabPanel(id="sys_details",
-                          title=tagList(shiny::icon("ghost"),
-                                        "Deployment Details"),
-                 htmlOutput(NS("ASM", "ui_asm_sys_detials"))
+                 shiny::tabPanel(id="sys_packages",
+                          title=tagList(shiny::icon("box-open"),
+                                        "Installed Packages"),
+                 htmlOutput(NS("ASM", "ui_asm_sys_packages"))
+                 ),
+                 shiny::tabPanel(id="sys_modules",
+                          title=tagList(shiny::icon("cubes"),
+                                        "Loaded Modules"),
+                 htmlOutput(NS("ASM", "ui_asm_sys_modules"))
                  ),
                  shiny::tabPanel(id="sys_log",
                           title=tagList(shiny::icon("clipboard-list"),
-                                        "App Log"),
+                                        "Log"),
                  verbatimTextOutput(NS("ASM", "ui_asm_sys_log"))
+                 ),
+                 shiny::tabPanel(id="sys_options",
+                          title=tagList(shiny::icon("sliders"),
+                                        "R Options"),
+                 htmlOutput(NS("ASM", "ui_asm_sys_options"))
                  )
          #       )
                ))
@@ -173,15 +216,15 @@ ui <- shinydashboard::dashboardPage(
 
 # Main app server
 server <- function(input, output, session) {
+
   # Empty reactive object to track and react to
   # changes in the module state outside of the module
   react_FM = reactiveValues()
 
   # Module IDs and the order they are needed for code generation
-  mod_ids = c("UD", "DW", "FG", "NCA")
+  mod_ids = c("UD", "DW", "FG", "NCA", "MB")
 
   # If the ftmptest file is present we load test data
-  ftmptest = file.path(tempdir(), "ruminate.test")
   if(file.exists(ftmptest)){
     NCA_test_mksession(
       session,
@@ -190,32 +233,49 @@ server <- function(input, output, session) {
       id_DW  = "DW",
       id_ASM = "ASM"
     )
+    MB_test_mksession(
+      session,
+      full_session=TRUE
+    )
   }
 
   # Module servers
   formods::ASM_Server( id="ASM",
-                       deployed     = deployed,
-                       react_state  = react_FM,
-                       FM_yaml_file = formods.yaml,
-                       mod_ids      = mod_ids)
-  formods::UD_Server(  id="UD",  id_ASM = "ASM",
-                       deployed     = deployed,
-                       react_state=react_FM,
-                       FM_yaml_file=formods.yaml)
+                       deployed      = deployed,
+                       react_state   = react_FM,
+                       FM_yaml_file  = formods.yaml,
+                       MOD_yaml_file = ASM.yaml,
+                       mod_ids       = mod_ids)
+  formods::UD_Server(  id ="UD", id_ASM = "ASM",
+                       deployed         = deployed,
+                       react_state      = react_FM,
+                       MOD_yaml_file    = UD.yaml,
+                       FM_yaml_file     = formods.yaml)
   formods::DW_Server(  id="DW",       id_ASM = "ASM",
                        id_UD = "UD",
-                       deployed     = deployed,
-                       react_state=react_FM,
-                       FM_yaml_file=formods.yaml)
+                       deployed         = deployed,
+                       react_state      = react_FM,
+                       MOD_yaml_file    = DW.yaml,
+                       FM_yaml_file     = formods.yaml)
   formods::FG_Server(  id="FG",     id_ASM = "ASM",
                        id_UD = "UD", id_DW = "DW",
-                       deployed     = deployed,
-                       react_state=react_FM,
-                       FM_yaml_file=formods.yaml)
-  ruminate::NCA_Server(id="NCA",     id_ASM = "ASM",
-                       id_UD = "UD", id_DW = "DW",
-                       deployed     = deployed,
-                       react_state=react_FM)
+                       deployed         = deployed,
+                       react_state      = react_FM,
+                       MOD_yaml_file    = FG.yaml,
+                       FM_yaml_file     = formods.yaml)
+  ruminate::NCA_Server(id    ="NCA", id_ASM = "ASM",
+                       id_UD = "UD", id_DW  = "DW",
+                       deployed         = deployed,
+                       react_state      = react_FM,
+                       MOD_yaml_file    = NCA.yaml,
+                       FM_yaml_file     = formods.yaml)
+
+  ruminate::MB_Server(id="MB", id_ASM = "ASM", 
+                      deployed         = deployed,
+                      react_state      = react_FM,
+                      MOD_yaml_file    = MB.yaml,
+                      FM_yaml_file     = formods.yaml)
+
 }
 
 shinyApp(ui, server)

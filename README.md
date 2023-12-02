@@ -4,11 +4,12 @@
 # ruminate <img src="man/figures/logo.png" align="right" height="138.5" />
 
 <!-- 
-![cranlogs](https://cranlogs.r-pkg.org/badges/ruminate)
-[![Codecov test coverage](https://codecov.io/gh/john-harrold/ruminate/branch/master/graph/badge.svg)](https://app.codecov.io/gh/john-harrold/ruminate?branch=master)
 -->
 <!-- badges: start -->
 
+[![Codecov test
+coverage](https://codecov.io/gh/john-harrold/ruminate/branch/master/graph/badge.svg)](https://app.codecov.io/gh/john-harrold/ruminate?branch=master)
+![cranlogs](https://cranlogs.r-pkg.org/badges/ruminate)
 ![Active](https://www.repostatus.org/badges/latest/active.svg)
 [![Lifecycle:
 Experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html)
@@ -35,12 +36,23 @@ instance and if many people are using it at once it can be slow.
 
 # Local installation
 
-<!---
-You can install the released version of ``rumiante`` from [CRAN](https://cran.r-project.org/package=ruminate) with:
-&#10;``` r
+## From CRAN
+
+You can install the released version of `rumiante` from
+[CRAN](https://cran.r-project.org/package=ruminate) with:
+
+``` r
+# Dependencies:
+install.packages("clipr")
+install.packages("gridExtra")
+install.packages("prompter")
+install.packages("readxl")
+install.packages("shinydashboard")
+install.packages("ubiquity")
+
+# Actual package
 install.packages("ruminate")
 ```
---->
 
 ## Development version
 
@@ -52,9 +64,18 @@ You can install the development version from
 if(system.file(package="devtools") == ""){
   install.packages("devtools") 
 }
+
+# Dependencies:
+install.packages("clipr")
+install.packages("gridExtra")
+install.packages("prompter")
+install.packages("readxl")
+install.packages("shinydashboard")
+install.packages("ubiquity")
+
 devtools::install_github("john-harrold/onbrand",  dependencies=TRUE)
 devtools::install_github("john-harrold/formods",  dependencies=TRUE)
-devtools::install_github("john-harrold/ruminate", dependencies=TRUE)
+devtools::install_github("john-harrold/ruminate")
 ```
 
 Note that because `{ruminate}` depends on `{formods}` and `{onbrand}`
