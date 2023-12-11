@@ -1,6 +1,6 @@
 Package: ruminate
 Title: A Pharmacometrics Data Transformation and Analysis Tool
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: 
     person("John", "Harrold", , "john.m.harrold@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-2052-4373"))
@@ -21,8 +21,8 @@ RoxygenNote: 7.2.3
 Config/testthat/edition: 3
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2023-12-02 05:10:52 UTC; jmh
+Packaged: 2023-12-11 00:08:32 UTC; jmh
 Author: John Harrold [aut, cre] (<https://orcid.org/0000-0003-2052-4373>)
 Maintainer: John Harrold <john.m.harrold@gmail.com>
 Repository: CRAN
-Date/Publication: 2023-12-02 05:50:02 UTC
+Date/Publication: 2023-12-11 09:00:02 UTC
