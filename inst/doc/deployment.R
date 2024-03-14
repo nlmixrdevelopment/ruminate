@@ -35,7 +35,7 @@
 # 
 # NCA_yaml = yaml::read_yaml(system.file(package="ruminate", "templates","NCA.yaml"))
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  formods.yaml  = system.file(package="formods",  "templates",  "formods.yaml")
 #  ASM.yaml      = system.file(package="formods",  "templates",  "ASM.yaml")
 #  UD.yaml       = system.file(package="formods",  "templates",  "UD.yaml")
@@ -43,10 +43,10 @@
 #  FG.yaml       = system.file(package="formods",  "templates",  "FG.yaml")
 #  NCA.yaml      = system.file(package="ruminate", "templates",  "NCA.yaml")
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  file.copy(from = system.file(package="ruminate", "templates",  "NCA.yaml"),
 #            to   = "myNCA.yaml")
 
-## ---- eval=FALSE--------------------------------------------------------------
+## ----eval=FALSE---------------------------------------------------------------
 #  NCA.yaml      = "myNCA.yaml"
 

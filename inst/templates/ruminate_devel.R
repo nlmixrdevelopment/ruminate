@@ -19,23 +19,12 @@ ASM.yaml      = system.file(package="formods",  "templates",  "ASM.yaml")
 UD.yaml       = system.file(package="formods",  "templates",  "UD.yaml")
 DW.yaml       = system.file(package="formods",  "templates",  "DW.yaml")
 FG.yaml       = system.file(package="formods",  "templates",  "FG.yaml")
+MB.yaml       = system.file(package="ruminate", "templates",  "MB.yaml")
 NCA.yaml      = system.file(package="ruminate", "templates",  "NCA.yaml")
-
-
-# Name of  file to indicate we need to load testing data
-ftmptest = file.path(tempdir(), "ruminate.test")
-
 
 # Making sure that the deployed object is created
 if(!exists("deployed")){
   deployed = FALSE
-}
-
-# Making sure that the run_dev object is created
-if(file.exists(file.path(tempdir(), "RUMINTE_DEVELOPMENT"))){
-  run_dev  = TRUE
-}else{
-  run_dev  = FALSE
 }
 
 # If the SETUP.R file exists we source it 
@@ -90,6 +79,7 @@ tags$li( "If you run into any problems, have questions, or want a feature please
         tags$a("issues", href=issue_url)," page")
 )
 
+ftmptest = file.path(tempdir(), "ruminate.test")
 
 ui <- shinydashboard::dashboardPage(
   skin="black",
@@ -102,6 +92,7 @@ ui <- shinydashboard::dashboardPage(
        shinydashboard::menuItem("Transform Data", tabName="wrangle", icon=icon("shuffle")),
        shinydashboard::menuItem("Visualize",      tabName="plot",    icon=icon("chart-line")),
        shinydashboard::menuItem("NCA",            tabName="nca",     icon=icon("chart-area")),
+       shinydashboard::menuItem("Models",         tabName="model",   icon=icon("trowel-bricks")),
        shinydashboard::menuItem("App Info",       tabName="sysinfo", icon=icon("book-medical"))
      )
   ),
@@ -115,6 +106,12 @@ ui <- shinydashboard::dashboardPage(
                fluidRow( prompter::use_prompt(),
                column(width=12,
                htmlOutput(NS("NCA",  "NCA_ui_compact")))))
+               ),
+       shinydashboard::tabItem(tabName="model",
+               shinydashboard::box(title="Build PK/PD Models", width=12,
+               fluidRow( 
+               column(width=12,
+               htmlOutput(NS("MB",  "MB_ui_compact")))))
                ),
        shinydashboard::tabItem(tabName="loadsave",
          #     shinydashboard::box(title=NULL, width=12,
@@ -219,6 +216,10 @@ server <- function(input, output, session) {
       id_DW  = "DW",
       id_ASM = "ASM"
     )
+    MB_test_mksession(
+      session,
+      full_session=TRUE
+    )
   }
 
   # Module servers
@@ -251,6 +252,12 @@ server <- function(input, output, session) {
                        react_state      = react_FM,
                        MOD_yaml_file    = NCA.yaml,
                        FM_yaml_file     = formods.yaml)
+
+  ruminate::MB_Server(id="MB", id_ASM = "ASM", 
+                      deployed         = deployed,
+                      react_state      = react_FM,
+                      MOD_yaml_file    = MB.yaml,
+                      FM_yaml_file     = formods.yaml)
 
 }
 

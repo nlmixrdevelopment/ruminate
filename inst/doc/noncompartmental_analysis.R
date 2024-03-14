@@ -7,7 +7,6 @@ require(ruminate)
 require(dplyr)
 # Determining if ubiquity is installed
 if(system.file(package="ubiquity") == ""){
-  require(ubiquity)
   ubiquity_found = FALSE
 } else {
   require(ubiquity)
