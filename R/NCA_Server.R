@@ -278,7 +278,6 @@ NCA_Server <- function(id,
                              id_DW           = id_DW,
                              react_state     = react_state)
 
-
       current_ana = NCA_fetch_current_ana(state)
 
       value       = current_ana[["key"]]
@@ -577,6 +576,10 @@ NCA_Server <- function(id,
         parameters_link = NULL
       }
 
+      picker_options = do.call(shinyWidgets::pickerOptions, 
+        state[["MC"]][["formatting"]][["select_ana_nca_parameters"]][["picker_options"]])
+      picker_options[["size"]] = state[["yaml"]][["FM"]][["ui"]][["select_size"]] 
+
       uiele =
       shinyWidgets::pickerInput(
         inputId    = NS(id, "select_ana_nca_parameters"),
@@ -585,7 +588,7 @@ NCA_Server <- function(id,
         selected   = value,
         multiple   = TRUE,
         width      = state[["MC"]][["formatting"]][["select_ana_nca_parameters"]][["width"]],
-        options    = list(size = state[["yaml"]][["FM"]][["ui"]][["select_size"]]),
+        options    = picker_options,
         inline     = TRUE)
       uiele})
     #------------------------------------
@@ -3000,7 +3003,8 @@ NCA_Server <- function(id,
     #------------------------------------
     # Removing holds
     remove_hold_listen  <- reactive({
-      list(input$select_current_ana,
+      list(react_state[[id_ASM]],
+           input$select_current_ana,
            input$select_current_view)
     })
     observeEvent(remove_hold_listen(), {
@@ -3570,8 +3574,20 @@ NCA_fetch_state = function(id, input, session,
     current_ana = NCA_fetch_current_ana(state)
 
     if(state[["NCA"]][["ui"]][["text_ana_key"]] != ""){
+
       # Resetting the key
       current_ana[["key"]] = state[["NCA"]][["ui"]][["text_ana_key"]]
+
+      # If the key is the same as the ID (the default value) then we name it
+      # the same as the data view being used:
+      if(current_ana[["key"]] == current_ana[["id"]]){
+        ana_dsview = state[["NCA"]][["ui"]][["select_current_view"]]
+        if(!is.null(state[["NCA"]][["DSV"]][["ds"]][[ ana_dsview ]][["label"]])){
+          if(state[["NCA"]][["DSV"]][["ds"]][[ ana_dsview ]][["label"]] != ""){
+            current_ana[["key"]] = state[["NCA"]][["DSV"]][["ds"]][[ ana_dsview ]][["label"]]
+          }
+        }
+      }
     } else {
       # returning an error
       msgs = c(msgs,
@@ -3587,6 +3603,9 @@ NCA_fetch_state = function(id, input, session,
     # Saving changes to the current analysis
     state = NCA_set_current_ana(state, current_ana)
 
+    # Setting holds to ensure any key changes are made
+    state = set_hold(state)
+
     notify_text = paste(
            tagList(paste0("Caption: ", current_ana[["key"]], ", " ),
              paste0("Source Data: ", state[["NCA"]][["DSV"]][["ds"]][[current_ana[["ana_dsview"]]]][["label"]], ", "),
@@ -3594,7 +3613,7 @@ NCA_fetch_state = function(id, input, session,
                         collapse="\n")
 
 
-    state = FM_set_notification(state, notify_text, "Interval Added", "info")
+    state = FM_set_notification(state, notify_text, "Analysis saved", "info")
 
 
     # Saving the button state to the counter
@@ -3651,7 +3670,7 @@ NCA_init_state = function(FM_yaml_file, MOD_yaml_file, id, id_UD, id_DW, session
     "tb_ind_params_rpt"              = "tb_ind_params_rpt",
     "tb_sum_params_rpt"              = "tb_sum_params_rpt",
     "check_fg_ind_obs_logy"          = "fg_ind_obs_logy",
-    "switch_ana_source_sampling"     = "sampling",
+    "select_ana_source_sampling"     = "sampling",
     "switch_ana_dose_from"           = "dose_from",
     "switch_ana_fig"                 = "fig_type",
     "switch_ana_tab"                 = "tab_type",
@@ -3835,7 +3854,7 @@ NCA_fetch_code = function(state){
     nps_def = paste0('NCA_nps = NCA_fetch_np_meta(file.path("config", "',
                      basename(state[["MOD_yaml_file"]]),
                      '"))[["summary"]]')
-    code = c("# NCA analyses", "", nps_def, code)
+    code = c("# NCA analyses ----", "", nps_def, code)
 
   } else {
     # Otherwise we just pass a comment that there were
@@ -6272,7 +6291,6 @@ mk_figure_ind_obs = function(
   col_group   = nca_res[["data"]][["conc"]][["columns"]][["groups"]][["group_vars"]]
   col_analyte = nca_res[["data"]][["conc"]][["columns"]][["groups"]][["group_analyte"]]
 
-
   # Retaining only the needed columns
   cols_keep = unique(c(col_id, col_time, col_conc, col_group, col_analyte))
 
@@ -6285,7 +6303,7 @@ mk_figure_ind_obs = function(
     dplyr::select(dplyr::all_of(cols_keep))                               |>
     dplyr::rename(CONC = dplyr::all_of(col_conc))                         |>   # Renaming columns to standard values
     dplyr::rename(TIME = dplyr::all_of(col_time))                         |>
-    dplyr::rename(ID   = dplyr::all_of(col_id))                           |>
+#   dplyr::rename(ID   = dplyr::all_of(col_id))                           |>
     dplyr::group_by(!!as.name(col_group))                                 |>
     dplyr::mutate(NONOBS = min(.data[["CONC"]][.data[["CONC"]]>0 &
                                !is.na(.data[["CONC"]])]))                 |>   # Creating a concentration for non-observations (0 and NA below)
@@ -6307,7 +6325,7 @@ mk_figure_ind_obs = function(
 
 
   # Subjects remaining to plot
-  subs_left = unique(all_data[["ID"]])
+  subs_left = unique(all_data[[col_id]])
   # Number of subjects per plot:
   subs_pp   = nfrows*nfcols
 
@@ -6344,7 +6362,7 @@ mk_figure_ind_obs = function(
     subs_current = subs_left[c(1:last_sub)]
 
     # This dataset contains the subset of the current subjects for plotting.
-    plot_ds = dplyr::filter(all_data, .data[["ID"]] %in% subs_current)
+    plot_ds = dplyr::filter(all_data, .data[[col_id]] %in% subs_current)
 
 
     p = ggplot2::ggplot(data = plot_ds)
@@ -6368,7 +6386,7 @@ mk_figure_ind_obs = function(
                                                group = .data[["GROUP_ALL"]],
                                                color = .data[["PKNCA_DATA_TYPE"]]))
     }
-    p = p + ggplot2::facet_wrap(.~.data[["ID"]], ncol=nfcols, nrow=nfrows, scales=scales)
+    p = p + ggplot2::facet_wrap(.~.data[[col_id]], ncol=nfcols, nrow=nfrows, scales=scales)
     p = p + ggplot2::theme_light()
     if(log_scale){
       p = p + ggplot2::scale_y_log10()
@@ -6389,7 +6407,6 @@ mk_figure_ind_obs = function(
   res = list(
     figures = figures
   )
-
 
 res}
 
@@ -6676,7 +6693,7 @@ mk_table_nca_params = function(
   if(type == "indiviudal"){
     # NAs come from parameters that were not calculated for whatever reason.
     # Having NAs pop up in reports is kind of sloppy so here we replace them
-    # with the user value:
+    # with the user-specified value:
     nca_data = nca_data |>
       dplyr::mutate(PPORRES =as.character(.data[["PPORRES"]])) |>
       dplyr::mutate(PPORRES = ifelse(.data[["PPORRES"]] == "NA",
@@ -6702,14 +6719,19 @@ mk_table_nca_params = function(
   #        This has the same information in long format and can be
   #        used to look up things like units when constructing the
   #        headers for reporting.
-  col_keep = c(col_id, rpt_name_group, "pnames", "PPORRES")
+
+  # ID isn't present in sparse sampling
+  col_keep = c()
+  if(col_id %in% names(nca_data)){
+    col_keep = c(col_keep, col_id)
+  }
+  col_keep = c(col_keep, rpt_name_group, "pnames", "PPORRES")
 
   tdata = nca_data |>
     dplyr::mutate(PPORRES = ifelse(is.na(.data[["PPORRES"]]), not_calc, .data[["PPORRES"]])) |>
     dplyr::select(dplyr::all_of(col_keep)) |>
     tidyr::pivot_wider(names_from="pnames",
                        values_from="PPORRES")
-
   # Creating a lookup table to group output and create headers
   col_lookup = nca_data                     |>
     dplyr::group_by(.data[["pnames"]])      |>
@@ -6746,13 +6768,29 @@ mk_table_nca_params = function(
     }
   }
 
+  # ID isn't present in sparse sampling
+  col_keep_id = c()
+  if(col_id %in% names(nca_data)){
+    col_keep_id = col_id
+  }
 
   # Now we reorder the columns of tdata according to the grouping above:
   tdata = dplyr::select(tdata,
-                        dplyr::all_of(c(col_id, rpt_name_group, nps_found[["pnames"]])))
+                        dplyr::all_of(c(col_keep_id, rpt_name_group, nps_found[["pnames"]])))
 
   # Rows that are common for each table:
-  row_common  = dplyr::select(tdata, dplyr::all_of(c(col_id, rpt_name_group)))
+  row_common  = dplyr::select(tdata, dplyr::all_of(c(col_keep_id, rpt_name_group)))
+
+  # This is an edge case from sparse sampling where there is one profile. For
+  # sparse sampling there is no ID and if there is only one group then then
+  # there is no common row. In this instance we have to create one in case it
+  # spills over onto multiple pages. 
+  if(ncol(row_common) == 0){
+    ROW = "Row"
+    row_common = 
+       dplyr::tibble(!!ROW := 1:nrow(tdata))
+
+  }
 
   # The table body
   table_body  = dplyr::select(tdata, dplyr::all_of((nps_found[["pnames"]])))

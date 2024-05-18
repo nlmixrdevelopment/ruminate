@@ -96,10 +96,24 @@ and `{formods}`.
 
 ## In RStudio
 
+This will run the default/stable version of rumiante:
+
 ``` r
 library(ruminate)
 ruminate()
 ```
+
+As new modules are developed they can be found in the development app.
+This command will run the ruminate with any development modules enabled:
+
+``` r
+library(ruminate)
+library(shiny)
+runApp(system.file(package="ruminate","templates", "ruminate_devel.R"))
+```
+
+**If you are running this you should probably be using the development
+version off of github to make sure you have the latest version.**
 
 ## In a Docker container
 
@@ -135,3 +149,8 @@ You can use this to pull the image from DockerHub:
 ``` bash
 docker pull <username>/ruminate:latest
 ```
+
+## Deployment and Customization
+
+If you want to deploy and customize ruminate, please see the [Deployment
+vignette](https://ruminate.ubiquity.tools/articles/deployment.html).

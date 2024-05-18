@@ -391,7 +391,9 @@ configuration files are defined:</p>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>UD.yaml       <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>,  <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;UD.yaml&quot;</span>)</span>
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>DW.yaml       <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>,  <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;DW.yaml&quot;</span>)</span>
 <span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>FG.yaml       <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>,  <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;FG.yaml&quot;</span>)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>NCA.yaml      <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;ruminate&quot;</span>, <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;NCA.yaml&quot;</span>)</span></code></pre></div>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>NCA.yaml      <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;ruminate&quot;</span>, <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;NCA.yaml&quot;</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>MB.yaml       <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;ruminate&quot;</span>, <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;MB.yaml&quot;</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>CTS.yaml      <span class="ot">=</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;ruminate&quot;</span>, <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;CTS.yaml&quot;</span>)</span></code></pre></div>
 <p>Each of these controls different aspects of the module including the
 text displayed, icons used, certain behaviors of the app, default
 values, etc. These options and are described in the comments of the
@@ -405,6 +407,41 @@ file. Then you need specify in the <code>App.R</code> file that you want
 to use the new configuration file.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>NCA.yaml      <span class="ot">=</span> <span class="st">&quot;myNCA.yaml&quot;</span></span></code></pre></div>
 <p>You can do the same thing for the other modules as well.</p>
+</div>
+<div id="reporting-templates" class="section level2">
+<h2>Reporting Templates</h2>
+<p>To use your own organizational templates you need to create
+<code>onbrand</code> Word and PowerPoint templates using the methods
+described here:</p>
+<ul>
+<li><a href="https://onbrand.ubiquity.tools/articles/Custom_Office_Templates.html">Creating
+onbrand templates</a></li>
+<li><a href="https://formods.ubiquity.tools/articles/included_modules.html#avialable-modules">formods
+reporting templates</a></li>
+</ul>
+<p>Place the Word (<code>report.docx</code>), PowerPoint
+(<code>report.pptx</code>), and YAML (<code>report.yaml</code>) files in
+a <code>templates</code> directory. Then you need to create a copy of
+the <code>formods</code> YAML file in the deployment folder.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">file.copy</span>(<span class="at">from =</span> <span class="fu">system.file</span>(<span class="at">package=</span><span class="st">&quot;formods&quot;</span>, <span class="st">&quot;templates&quot;</span>,  <span class="st">&quot;formods.yaml&quot;</span>),</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>          <span class="at">to   =</span> <span class="st">&quot;myformods.yaml&quot;</span>)</span></code></pre></div>
+<p>Next you need to edit the <code>myformods.yaml</code> file to ensure
+those new files are used by editing the <code>include</code> section to
+update the sources for each file. See below:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>FM<span class="sc">:</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  include<span class="sc">:</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    files<span class="sc">:</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span> file<span class="sc">:</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>        source<span class="sc">:</span> <span class="st">&#39;file.path(&quot;.&quot;, &quot;templates&quot;, &quot;report.docx&quot;)&#39;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>        dest<span class="sc">:</span>   <span class="st">&#39;file.path(&quot;config&quot;,&quot;report.docx&quot;)&#39;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span> file<span class="sc">:</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>        source<span class="sc">:</span> <span class="st">&#39;file.path(&quot;.&quot;, &quot;templates&quot;, &quot;report.pptx&quot;)&#39;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>        dest<span class="sc">:</span>   <span class="st">&#39;file.path(&quot;config&quot;,&quot;report.pptx&quot;)&#39;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="sc">-</span> file<span class="sc">:</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>        source<span class="sc">:</span> <span class="st">&#39;file.path(&quot;.&quot;, &quot;templates&quot;, &quot;report.yaml&quot;)&#39;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        dest<span class="sc">:</span>   <span class="st">&#39;file.path(&quot;config&quot;,&quot;report.yaml&quot;)&#39;</span></span></code></pre></div>
+<p>Then change the <code>App.R</code> file to point to the new
+<code>myformods.yaml</code> file.</p>
 </div>
 </div>
 
