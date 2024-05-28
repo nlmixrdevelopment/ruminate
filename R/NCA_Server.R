@@ -259,8 +259,8 @@ NCA_Server <- function(id,
     # Captions
     # name
     output$ui_nca_ana_name       = renderUI({
-      react_state[[id_UD]]
-      react_state[[id_DW]]
+      #react_state[[id_UD]]
+      #react_state[[id_DW]]
       react_state[[id_ASM]]
 
       input[["button_ana_new"]]
@@ -291,8 +291,8 @@ NCA_Server <- function(id,
     #------------------------------------
     # notes
     output$ui_nca_ana_notes      = renderUI({
-      react_state[[id_UD]]
-      react_state[[id_DW]]
+      #react_state[[id_UD]]
+      #react_state[[id_DW]]
       react_state[[id_ASM]]
 
       input[["button_ana_new"]]
@@ -326,8 +326,8 @@ NCA_Server <- function(id,
       uiele})
     #------------------------------------
     output$ui_nca_curr_anas = renderUI({
-      react_state[[id_UD]]
-      react_state[[id_DW]]
+      #react_state[[id_UD]]
+      #react_state[[id_DW]]
       react_state[[id_ASM]]
 
       input[["button_ana_new"]]
@@ -384,8 +384,8 @@ NCA_Server <- function(id,
       uiele})
     # Data Sources
     output$ui_nca_curr_views    = renderUI({
-      react_state[[id_UD]]
-      react_state[[id_DW]]
+      #react_state[[id_UD]]
+      #react_state[[id_DW]]
       react_state[[id_ASM]]
 
       input[["button_ana_new"]]
@@ -431,8 +431,6 @@ NCA_Server <- function(id,
       input$button_ana_del
       input$select_current_ana
       #req(input$select_current_view)
-
-
       react_state[[id_UD]]
       react_state[[id_DW]]
       react_state[[id_ASM]]
@@ -576,9 +574,9 @@ NCA_Server <- function(id,
         parameters_link = NULL
       }
 
-      picker_options = do.call(shinyWidgets::pickerOptions, 
+      picker_options = do.call(shinyWidgets::pickerOptions,
         state[["MC"]][["formatting"]][["select_ana_nca_parameters"]][["picker_options"]])
-      picker_options[["size"]] = state[["yaml"]][["FM"]][["ui"]][["select_size"]] 
+      picker_options[["size"]] = state[["yaml"]][["FM"]][["ui"]][["select_size"]]
 
       uiele =
       shinyWidgets::pickerInput(
@@ -2706,8 +2704,8 @@ NCA_Server <- function(id,
     #------------------------------------
     output$NCA_ui_compact  =  renderUI({
       # Forcing a reaction to changes in other modules
-      react_state[[id_UD]]
-      react_state[[id_DW]]
+      #react_state[[id_UD]]
+      #react_state[[id_DW]]
       react_state[[id_ASM]]
 
       state = NCA_fetch_state(id              = id,
@@ -3156,21 +3154,46 @@ NCA_fetch_state = function(id, input, session,
     }
   }
 
-  # This is changes in the wrangled data views
+  # Changes in data views from data wrangling module
   if("checksum" %in% names(isolate(react_state[[id_DW]][["DW"]]))){
     if(!is.null(isolate(react_state[[id_DW]][["DW"]][["checksum"]]))){
-      if(is.null(state[["NCA"]][["DSV"]][["modules"]][["DW"]][[id_DW]])){
-        # If the DW checksum isn't NULL but the stored value in DSV is then we
-        # need to update the dataset
-        UPDATE_DS = TRUE
-      } else if(isolate(react_state[[id_DW]][["DW"]][["checksum"]]) !=
-                state[["NCA"]][["DSV"]][["modules"]][["DW"]][[id_DW]]){
-        # If the stored checksum in DSV is different than the currently
-        # uploaded dataset in DW then we force a reset as well:
-        UPDATE_DS = TRUE
+      if(isolate(react_state[[id_DW]][["DW"]][["hasds"]])){
+        if(is.null(state[["NCA"]][["DSV"]][["modules"]][["DW"]][[id_DW]])){
+          # If the DW checksum isn't NULL but the stored value in DSV is then we
+          # need to update the dataset
+          UPDATE_DS = TRUE
+        } else if(isolate(react_state[[id_DW]][["DW"]][["checksum"]]) !=
+                  state[["NCA"]][["DSV"]][["modules"]][["DW"]][[id_DW]]){
+          # If the stored checksum in DSV is different than the currently
+          # uploaded dataset in DW then we force a reset as well:
+          UPDATE_DS = TRUE
+        }
+      } else {
+        # If there is no dataset but there was one once before we also
+        # trigger a dataset update:
+        if(!is.null(state[["NCA"]][["DSV"]][["modules"]][["DW"]][[id_DW]])){
+          UPDATE_DS = TRUE
+        }
       }
     }
   }
+
+
+# # This is changes in the wrangled data views
+# if("checksum" %in% names(isolate(react_state[[id_DW]][["DW"]]))){
+#   if(!is.null(isolate(react_state[[id_DW]][["DW"]][["checksum"]]))){
+#     if(is.null(state[["NCA"]][["DSV"]][["modules"]][["DW"]][[id_DW]])){
+#       # If the DW checksum isn't NULL but the stored value in DSV is then we
+#       # need to update the dataset
+#       UPDATE_DS = TRUE
+#     } else if(isolate(react_state[[id_DW]][["DW"]][["checksum"]]) !=
+#               state[["NCA"]][["DSV"]][["modules"]][["DW"]][[id_DW]]){
+#       # If the stored checksum in DSV is different than the currently
+#       # uploaded dataset in DW then we force a reset as well:
+#       UPDATE_DS = TRUE
+#     }
+#   }
+# }
 
   if(UPDATE_DS){
     formods::FM_le(state, "Updating DS")
@@ -6784,10 +6807,10 @@ mk_table_nca_params = function(
   # This is an edge case from sparse sampling where there is one profile. For
   # sparse sampling there is no ID and if there is only one group then then
   # there is no common row. In this instance we have to create one in case it
-  # spills over onto multiple pages. 
+  # spills over onto multiple pages.
   if(ncol(row_common) == 0){
     ROW = "Row"
-    row_common = 
+    row_common =
        dplyr::tibble(!!ROW := 1:nrow(tdata))
 
   }
