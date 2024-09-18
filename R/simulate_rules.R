@@ -123,7 +123,7 @@ simulate_rules <- function(object,
 
 
     fpd}
-    '  
+    '
 
     preamble = paste0(c(std_fcns, preamble), collapse="\n")
 
@@ -254,7 +254,7 @@ simulate_rules <- function(object,
     # Simulating before the fist eval_time to get
     # a snapshot of the simulation:
     tmp_ot  = sort(unique(c(ot_sim[ot_sim < min(eval_times)], min(eval_times))))
-    init_ev  = rxode2et::et(time=tmp_ot, id=sub_ids, cmt=rx_details[["elements"]][["outputs"]][1])
+    init_ev  = rxode2::et(time=tmp_ot, id=sub_ids, cmt=rx_details[["elements"]][["outputs"]][1])
 
     #rxdetails[["elements"]][["outputs"]][1]
     sim_cmd = paste0(c(preamble,
@@ -272,7 +272,7 @@ simulate_rules <- function(object,
     if(!is.null(pbo)){
       cli::cli_progress_update(id=pbo)
     }
-  
+
 
     if(tcres[["isgood"]]){
       #sim_pre = as.data.frame(tcres[["capture"]][["sim"]])
@@ -459,8 +459,8 @@ simulate_rules <- function(object,
                             sub_ot = sub_ot[sub_ot >= t_min & sub_ot <=t_max]
                           }
 
-                          interval_ev = rxode2et::etRbind(interval_ev,
-                                           rxode2et::et(
+                          interval_ev = rxode2::etRbind(interval_ev,
+                                           rxode2::et(
                                               cmt  = tmp_cmt,
                                               id   = sub_id,
                                               amt  = dvals,
@@ -583,20 +583,20 @@ simulate_rules <- function(object,
                 } else {
                  new_state_amt  = sub_state[[state]]
                 }
-                interval_ev = rxode2et::etRbind(interval_ev,
-                                 rxode2et::et(
+                interval_ev = rxode2::etRbind(interval_ev,
+                                 rxode2::et(
                                     cmt  = state,
                                     id   = sub_id,
                                     amt  = new_state_amt,
                                     evid = 4,
                                     time = eval_times[et_idx]))
               }
-              
+
               # Combining the subject specific sampling with
               # the interval samples:
               sub_ot       = sort(unique(c(sub_ot, tmp_ot)))
-              interval_ev  = rxode2et::etRbind(interval_ev,
-                             rxode2et::et(time=sub_ot, id=sub_id,
+              interval_ev  = rxode2::etRbind(interval_ev,
+                             rxode2::et(time=sub_ot, id=sub_id,
                              cmt=rx_details[["elements"]][["outputs"]][1]))
 
             }
@@ -617,32 +617,32 @@ simulate_rules <- function(object,
               tc_env  = list(object   = object,
                              subjects = subjects,
                              ev       = interval_ev))
-            
+
             # Storing all of the events in a single table to return to the user
-            ev_history  = rxode2et::etRbind(ev_history , interval_ev)
-            
+            ev_history  = rxode2::etRbind(ev_history , interval_ev)
+
             if(tcres[["isgood"]]){
-            
+
               # This contains the current chunk of the simulation:
               #tmp_sim = as.data.frame(tcres[["capture"]][["sim"]])
               tmp_sim =
               fetch_rxtc(rx_details = rx_details,
                          sim        = tcres[["capture"]][["sim"]])
-            
+
               # Setting the rule flag for the presimulation
               for(rule_id in names(rules)){
                 tmp_sim[[rule_id]] = sub_rule_flags[[rule_id]]
               }
-            
+
               # We need to glue the simulations together. So first we remove the
               # last time point off of the simall data frame. The last time
               # point of that data frame should be the first of this new
               # simulation:
               simall = simall[simall[["time"]] != eval_times[et_idx], ]
-            
+
               # Now we stack the old simulations on top of the new one:
               simall = rbind(simall, tmp_sim)
-            
+
             } else {
               error_flag = "Warning: dosing beyond time interval"
               if(is.null(errors_found[[error_flag]])){
@@ -715,7 +715,7 @@ res}
 #' \itemize{
 #'  \item{isgood:}       Return status of the function.
 #'  \item{msgs:}         Error or warning messages if any issues were encountered.
-#'  \item{npages:}       Total number of pages using the current configuration. 
+#'  \item{npages:}       Total number of pages using the current configuration.
 #'  \item{error_msgs:}   List of error messages used.
 #'  \item{dsp:}          Intermediate dataset generated from \code{sro} to plot in ggplot.
 #'  \item{fig:}          Figure generated.
@@ -758,7 +758,7 @@ plot_sr_ev <- function(
 
   if(!all(evplot %in% allowed_evplot)){
     isgood = FALSE
-    msgs = c(msgs, paste0("evplot not allowed: ", 
+    msgs = c(msgs, paste0("evplot not allowed: ",
              paste0(evplot[!(evplot %in% allowed_evplot)], collapse=", "))
             )
   }
@@ -799,22 +799,22 @@ plot_sr_ev <- function(
   # Now we inspect the datasets
   if(isgood){
 
-    col_keep = c("id", "time", "cmt", "amt", "evid", 
+    col_keep = c("id", "time", "cmt", "amt", "evid",
                  "Event", "Group")
-    
+
     dsp = sro[["ev_history"]]                            |>
      dplyr::filter(!is.na(.data[["amt"]]))               |>
      dplyr::filter(.data[["evid"]] %in% evplot)          |>
      dplyr::mutate(Event = "")                           |>
-     dplyr::mutate(Event = 
-       ifelse(.data[["evid"]] == 1, 
-              "Dose", 
+     dplyr::mutate(Event =
+       ifelse(.data[["evid"]] == 1,
+              "Dose",
               .data[["Event"]]))                         |>
-     dplyr::mutate(Event =                               
-       ifelse(.data[["evid"]] == 4,                      
-              "Set State",                                    
+     dplyr::mutate(Event =
+       ifelse(.data[["evid"]] == 4,
+              "Set State",
               .data[["Event"]]))                         |>
-     dplyr::mutate(Group = 
+     dplyr::mutate(Group =
        paste0(.data[["Event"]], ": ", .data[["cmt"]]))   |>
      dplyr::select(col_keep)
 
@@ -827,33 +827,33 @@ plot_sr_ev <- function(
 
         # Total number:
         num_fcol = length(unique(dsp[[fcol]]))
-        
+
         # Number per page:
         num_pp =  fnrow*fncol
-        
-        # We only have to shrink it down  if there 
+
+        # We only have to shrink it down  if there
         # are too many for a single page:
         if(num_fcol > num_pp){
           # Total number of pages needed for all the figures
           npages = ceiling(num_fcol/num_pp)
-        
+
           # This will reset the facet page if a value > npages was specified
           if(fpage > npages){
             msgs = c(msgs, paste0("fpage: ", error_msgs[["fpage_dne"]]))
             fpage = 1
           }
-        
+
           start_idx = (fpage-1)*num_pp+1
           stop_idx  = min(c((fpage)*num_pp, num_fcol))
-        
-        
+
+
           # This is all of the factor column values:
           tmp_fcol_vals = sort(unique(dsp[[fcol]]))
-        
+
           # now we pull out the subset
           tmp_fcol_vals = tmp_fcol_vals[start_idx:stop_idx]
-        
-          # Now we need to filter down to the subset 
+
+          # Now we need to filter down to the subset
           # that will be on the page requested:
           dsp = dsp[dsp[[fcol]] %in% tmp_fcol_vals, ]
         }
@@ -875,22 +875,22 @@ plot_sr_ev <- function(
         color      = "grey",
         linetype   = "dashed")       +
       ggplot2::geom_point(
-        aes(x    = .data[["time"]], 
-           y     = .data[["amt"]], 
-           group = .data[["Group"]], 
+        aes(x    = .data[["time"]],
+           y     = .data[["amt"]],
+           group = .data[["Group"]],
            color = .data[["Group"]]))  +
       ggplot2::geom_line(
-        aes(x     = .data[["time"]], 
-            y     = .data[["amt"]], 
-            group = .data[["Group"]], 
-            color = .data[["Group"]])) 
+        aes(x     = .data[["time"]],
+            y     = .data[["amt"]],
+            group = .data[["Group"]],
+            color = .data[["Group"]]))
 
     if(!is.null(fcol)){
       fig = fig +facet_wrap(.~.data[[fcol]], ncol=fncol, nrow=fnrow)
     }
 
     if(ylog){
-      fig = fig +ggplot2::scale_y_log10() 
+      fig = fig +ggplot2::scale_y_log10()
     }
 
     if(!is.null(ylab_str)){
@@ -916,7 +916,7 @@ plot_sr_ev <- function(
     npages     = npages,
     error_msgs = error_msgs,
     dsp        = dsp,
-    fig        = fig 
+    fig        = fig
   )
 res}
 
@@ -940,7 +940,7 @@ res}
 #' \itemize{
 #'  \item{isgood:}       Return status of the function.
 #'  \item{msgs:}         Error or warning messages if any issues were encountered.
-#'  \item{npages:}       Total number of pages using the current configuration. 
+#'  \item{npages:}       Total number of pages using the current configuration.
 #'  \item{error_msgs:}   List of error messages used.
 #'  \item{dsp:}          Intermediate dataset generated from \code{sro} to plot in ggplot.
 #'  \item{fig:}          Figure generated.
@@ -1024,33 +1024,33 @@ plot_sr_tc <- function(
 
         # Total number:
         num_fcol = length(unique(dsp[[fcol]]))
-        
+
         # Number per page:
         num_pp =  fnrow*fncol
-        
-        # We only have to shrink it down  if there 
+
+        # We only have to shrink it down  if there
         # are too many for a single page:
         if(num_fcol > num_pp){
           # Total number of pages needed for all the figures
           npages = ceiling(num_fcol/num_pp)
-        
+
           # This will reset the facet page if a value > npages was specified
           if(fpage > npages){
             msgs = c(msgs, paste0("fpage: ", error_msgs[["fpage_dne"]]))
             fpage = 1
           }
-        
+
           start_idx = (fpage-1)*num_pp+1
           stop_idx  = min(c((fpage)*num_pp, num_fcol))
-        
-        
+
+
           # This is all of the factor column values:
           tmp_fcol_vals = sort(unique(dsp[[fcol]]))
-        
+
           # now we pull out the subset
           tmp_fcol_vals = tmp_fcol_vals[start_idx:stop_idx]
-        
-          # Now we need to filter down to the subset 
+
+          # Now we need to filter down to the subset
           # that will be on the page requested:
           dsp = dsp[dsp[[fcol]] %in% tmp_fcol_vals, ]
         }
@@ -1066,21 +1066,21 @@ plot_sr_tc <- function(
   # dsp - should be defined with subset of the data for the current figure
   if(isgood){
     # These are the columns we keep for plotting
-    col_keep = c("time", "id", dvcols, fcol) 
+    col_keep = c("time", "id", dvcols, fcol)
     dsp = dplyr::select(dsp, dplyr::all_of(col_keep))
 
     # This puts the dependent variables into standard columns
-    dsp = tidyr::pivot_longer(dsp, 
-            cols      = dvcols, 
-            names_to  = "output_names", 
+    dsp = tidyr::pivot_longer(dsp,
+            cols      = dvcols,
+            names_to  = "output_names",
             values_to = "output")
-    dsp = dplyr::mutate(dsp, 
+    dsp = dplyr::mutate(dsp,
               pgroup = paste0(.data[["id"]], ":", .data[["output_names"]]))
 
     fig = ggplot(data=dsp)+
-      geom_line(aes(x     = .data[["time"]], 
-                    y     = .data[["output"]], 
-                    group = .data[["pgroup"]], 
+      geom_line(aes(x     = .data[["time"]],
+                    y     = .data[["output"]],
+                    group = .data[["pgroup"]],
                     color = .data[["output_names"]]))
 
     if(!is.null(fcol)){
@@ -1088,7 +1088,7 @@ plot_sr_tc <- function(
     }
 
     if(ylog){
-      fig = fig +ggplot2::scale_y_log10() 
+      fig = fig +ggplot2::scale_y_log10()
     }
 
     if(!is.null(ylab_str)){
@@ -1114,7 +1114,7 @@ plot_sr_tc <- function(
     npages     = npages,
     error_msgs = error_msgs,
     dsp        = dsp,
-    fig        = fig 
+    fig        = fig
   )
 res}
 
@@ -1164,9 +1164,9 @@ fetch_rxinfo <- function(object){
       population     = population,
       parameters     = parameters,
       secondary      = secondary,
-      residual_error = residual_error,     
+      residual_error = residual_error,
       iiv            = iiv,
-      outputs        = outputs,    
+      outputs        = outputs,
       states         = states)
 
 
@@ -1211,7 +1211,7 @@ fetch_rxinfo <- function(object){
       ht_info  = tagList(ht_info, tags$em("None found"), tags$br(), tags$br())
       list_info = c(list_info, 1,"Covariates: None Found")
     }
-    # Population parameters 
+    # Population parameters
     txt_info = c(txt_info, "Population Parameters\n")
     ht_info  = tagList(ht_info, tags$b("Population Parameters"), tags$br())
     if(length(population) > 0){
@@ -1389,9 +1389,9 @@ mk_subjects <- function(object, nsub = 10, covs=NULL){
       #-----------------------------------------------------------------
       # JMH figure out a better way to do this using low level functions
       tmp_cmt = rx_details[["elements"]][["states"]][1]
-      ev <-rxode2et::et(amt=0, cmt=force(tmp_cmt), id=c(1:nsub)) 
+      ev <-rxode2::et(amt=0, cmt=force(tmp_cmt), id=c(1:nsub))
 
-     #ev <-rxode2et::et(amt=0, cmt=1, id=c(1:nsub)) |>
+     #ev <-rxode2::et(amt=0, cmt=1, id=c(1:nsub)) |>
      #     add.sampling(c(0,1))
       sim  <- rxode2::rxSolve(object, ev, nSub=nsub, iCov = iCov)
       params = as.data.frame(sim$params)
@@ -1440,12 +1440,12 @@ fetch_rxtc <- function(rx_details, sim){
     # This is a temporary (hopefully) fix until this feature is added:
     # https://github.com/nlmixr2/rxode2/issues/638
     rxtc   = as.data.frame(sim)
-   
+
     # Catching the case where there is 1 subject and no "id" column
     if(!("id" %in% names(rxtc))){
       rxtc[["id"]] = 1
     }
-   
+
    ## Merging any covariates from params
    #if(length(rx_details[["elements"]][["covariates"]])>0){
    #  params = as.data.frame(sim$params)
